@@ -8,5 +8,15 @@
         android:orderInCategory="100"
         android:title="@string/action_settings"
         app:showAsAction="never"/>
+    <item
+       android:id="@+id/menu_next_camera"
+       android:orderInCategory="100"
+       android:showAsAction="ifRoom|withText"
+       android:title="@string/menu_next_camera"/>
+     <item
+       android:id="@+id/menu_authenticate"
+       android:orderInCategory="100"
+       android:showAsAction="always|withText"
+       android:title="@string/menu_authenticate"/>
 
 </menu>

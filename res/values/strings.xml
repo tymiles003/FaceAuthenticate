@@ -4,5 +4,7 @@
     <string name="app_name">FaceAuthenticate</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="menu_authenticate">Authenticate</string>
+    <string name="menu_next_camera">Next Camera</string>
 
 </resources>

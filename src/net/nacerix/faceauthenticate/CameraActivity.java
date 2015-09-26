@@ -3,6 +3,7 @@ package net.nacerix.faceauthenticate;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -14,6 +15,11 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 import android.annotation.SuppressLint;
 import android.hardware.Camera;
@@ -69,6 +75,12 @@ public class CameraActivity extends ActionBarActivity implements CvCameraViewLis
     // Whether an asynchronous menu action is in progress.
     // If so, menu interaction should be disabled.
     private boolean mIsMenuLocked;
+    
+    //Rectangle used to focus on the face to recognize.
+    private Point mCenterPoint;
+    private int mFocusHeight;
+    private int mFocusWidth;
+    private final Scalar mLineColor = new Scalar(0, 255, 0);
 
     // The OpenCV loader callback.
     private BaseLoaderCallback mLoaderCallback = 
@@ -121,6 +133,9 @@ public class CameraActivity extends ActionBarActivity implements CvCameraViewLis
         camera.release();
         mSupportedImageSizes = parameters.getSupportedPreviewSizes();
         final Size size = mSupportedImageSizes.get(mImageSizeIndex);
+        mCenterPoint = new Point( size.width/2, size.height/2);
+        mFocusHeight = size.height/4;
+        mFocusWidth = size.width/4;
         
         mCameraView = new JavaCameraView(this, mCameraIndex);
         mCameraView.setMaxFrameSize(size.width, size.height);
@@ -254,10 +269,27 @@ public class CameraActivity extends ActionBarActivity implements CvCameraViewLis
 	@Override
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 		final Mat rgba = inputFrame.rgba();
+		
+		int x = (int) (mCenterPoint.x - mFocusWidth);
+		int y = (int) (mCenterPoint.y - mFocusHeight);
+		//int x = (int)mCenterPoint.x;
+		//int y = (int)mCenterPoint.y;
+		final Rect focusArea = new Rect(x, y, mFocusWidth*2, mFocusHeight*2);
+		
+		ArrayList<Point> focusPoints = new ArrayList<Point>();
+		focusPoints.add(focusArea.tl());
+		focusPoints.add(new Point(focusArea.tl().x, focusArea.br().y));
+		focusPoints.add(focusArea.br());
+		focusPoints.add(new Point(focusArea.br().x, focusArea.tl().y));
+		
+		Imgproc.line(rgba, focusPoints.get(0), focusPoints.get(1), mLineColor, 1);
+		Imgproc.line(rgba, focusPoints.get(1), focusPoints.get(2), mLineColor, 1);
+		Imgproc.line(rgba, focusPoints.get(2), focusPoints.get(3), mLineColor, 1);
+		Imgproc.line(rgba, focusPoints.get(3), focusPoints.get(0), mLineColor, 1);
         
         if (mIsPhotoPending) {
             mIsPhotoPending = false;
-            authenticate(rgba);
+            authenticate(rgba, focusArea);
         }
         
         if (mIsCameraFrontFacing) {
@@ -268,7 +300,7 @@ public class CameraActivity extends ActionBarActivity implements CvCameraViewLis
         return rgba;
 	}
 	
-	private void authenticate(final Mat rgba) {
+	private void authenticate(final Mat rgba, final Rect roi) {
 		return ;
     }
 }
